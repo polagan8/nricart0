@@ -1,77 +1,109 @@
-# NRICart — A little closer to home
+# NRICart — the full pantry storefront
 
-A new editorial storefront built for your Git → Vercel workflow, with an optional Supabase product catalog. This is a separate rebuild, not an overwrite of an existing repository.
+A Vite storefront for an Indian pantry business serving NRIs: pickles, turmeric, chilli powder and whole spices. This update replaces the four-pickle-only store with a custom-box shopping flow and a Supabase-backed application implementation.
+
+## What works without a connection
+
+- Home, searchable/filterable/sortable pantry, product details and three pack sizes.
+- Custom box with quantities, stock limits, persistent local cart, product-weight calculation and destination selection.
+- Free delivery **strictly above 10,000 g**. Exactly 10 kg still pays delivery. Product weight excludes packaging.
+- Checkout preview and unpaid preview receipt. Demo delivery details are not saved.
+- Account page layouts and a clearly labelled, read-only admin preview.
+- GSAP ScrollTrigger: hero/copy parallax, large text moving with scrolling, section reveals and image parallax. Native scrolling, pause control and reduced-motion support.
+- Responsive mobile navigation and a fixed box weight/review bar.
+
+## What requires Supabase
+
+The integration code and tested SQL migration are included. **No hosted Supabase project has been connected or migrated as part of this delivery.** Once configured:
+
+- Email/password signup, confirmation, login, sign-out and password reset.
+- Customer saved boxes and their own preview order history.
+- Admin product creation and editing, pack-size prices, stock, visibility, shipping rates and preview-order review status.
+- Server-calculated prices, weight and delivery. Browser-supplied totals are never trusted.
+- Row-level security separates customers' boxes/orders. Admin membership is stored in a protected database table, never user-editable metadata.
+
+Payments are deliberately a preview. Orders remain `not_paid`, are never shipped, and do not reserve inventory. A future live payment rollout needs a server-side gateway integration, verified webhooks, transactional stock reservation, verified catalog and shipping eligibility, taxes/duties, policies and operational fulfilment.
 
 ## Run
 
-Use Node 22.12+ (or a compatible newer LTS).
+Node 22.12+ or 24; npm.
 
 ```sh
 npm ci
 npm run dev
-npm run build
-npm run preview
 npm test
+npm run test:ui
+npm run build
 ```
 
-The source is deliberately small: `index.html`, `src/style.css`, `src/main.js`, and `src/catalog.js`. Vite builds a static `dist/` folder. No runtime framework or animation CDN is required. Six optimized WebP assets are local. Fonts currently load from Google Fonts, with system fallbacks.
+`npm test` runs cart/math tests plus actual PostgreSQL-compatible tests in PGlite. `npm run test:ui` builds and tests the actual bundle in Happy DOM. These are not browser screenshot or device tests.
 
-## Included
+For a file-openable demo, run `npm run preview:portable`, then open `dist/preview.html` with the adjacent `images` directory intact. `dist/mobile-preview.html` provides a 390 px frame. These files are for convenient local review; deploy the normal `dist/index.html` to Vercel.
 
-- Editorial homepage with food photography, story and serving suggestions.
-- Pointer-responsive hero depth (CSS perspective), layered scroll parallax, staggered product entrances, serving-image parallax, a scroll-linked flavour strip, page progress, hover zoom, motion pause and reduced-motion support. This is not a rotatable WebGL product model.
-- Vegetarian/non-vegetarian filters and accessible native product dialogs.
-- Device-local persistent bag, quantity controls, removal and price totals.
-- WhatsApp bag enquiry using the public NRICart contact on nricart.com. No message is sent until the visitor acts in WhatsApp.
-- Optional read-only Supabase product loading; empty/error states.
-- Vercel configuration, example environment variables and isolated SQL schema.
+## Connect a development Supabase project
 
-## Preview versus live commerce
+1. Apply `supabase/migrations/20260924_pantry.sql` once through Supabase SQL Editor or the Supabase CLI migration workflow. It creates new `nr_*` tables and does not alter the old catalog tables. The old `supabase/schema.sql` is retained only as historical source; do not use it for this version.
+2. Optionally run `supabase/seed-development.sql` in a **development** project. Its products, prices, stocks and destination rates are illustrative. Do not seed these as real production offers.
+3. Copy `.env.example` to `.env.local`. Set the project URL and public publishable key. Legacy public anon keys are supported. Never expose a service-role or secret key in `VITE_*` variables.
+4. In Supabase Auth, enable email/password authentication, configure email confirmation/SMTP, and allow your exact local and Vercel site URLs as authentication redirects. The app returns users to `/#/account`. Test confirmation and password recovery on the deployed origin.
+5. Create your own account. Assign administrator access from trusted SQL, replacing the placeholder with your actual Auth user UUID:
 
-The four default products, prices, serving descriptions and generated images are demonstration content. They do not establish actual ingredients, preparation methods, stock, certification, shelf life or packaging. The interface labels preview pricing. Replace the imagery with approved real product photographs before a transactional launch. No fake reviews, sales counts or shipping promises are included.
+```sql
+insert into public.nr_admins(user_id)
+values ('YOUR-AUTH-USER-UUID')
+on conflict do nothing;
+```
 
-The bag ends in an enquiry, not a checkout or payment. No order is stored, no inventory is reserved, and no payment provider is connected. Adding paid checkout requires server-side price lookup, inventory validation, payment confirmation/webhooks, order storage and business policies. Never trust a browser cart's totals for payment.
+6. Sign out and back in. Open `/#/admin`. Review product details and stock before activation. Shipping destinations must be enabled explicitly in production.
+7. Verify a real customer account cannot see another account's records and cannot call admin functions. Test sign-in, confirmation, recovery, saved boxes and server-backed preview orders against your project before launch.
 
-## Connect Supabase
+### Tables
 
-1. Review `supabase/schema.sql` and run it once in a development Supabase project. It creates a separate `storefront_products` table; it does not migrate your existing catalog.
-2. Add verified product rows. Prices are INR amounts (not paise). Set `active=true` only on approved rows. Images can be site-relative `/images/mango.webp` or trusted HTTPS URLs.
-3. Copy `.env.example` to `.env.local`; add your project URL and public **legacy anon key**. Never put a service-role key, secret key or database password in a VITE variable.
-4. Set the same `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel and redeploy. Vite embeds public values at build time.
-5. Confirm the deployed catalog is correct. The browser has SELECT access to active products only; it has no insert/update/delete policy.
+| Table         | Purpose                                                               |
+| ------------- | --------------------------------------------------------------------- |
+| `nr_products` | Product descriptions, images, category, diet and visibility           |
+| `nr_variants` | Pack sizes in grams, INR prices and stock                             |
+| `nr_shipping` | Enabled destination countries and delivery rates                      |
+| `nr_boxes`    | One saved box per authenticated customer                              |
+| `nr_orders`   | Unpaid preview orders, immutable price snapshots and delivery details |
+| `nr_admins`   | Administrator membership managed only through trusted SQL             |
 
-Without credentials the labelled demo works. If configured catalog loading fails, an explicit message identifies the preview fallback. A valid empty catalog is displayed as empty.
+### Security choices
 
-## Git and Vercel
+- Customers can only read their own orders and manage their own saved box.
+- Catalog edits happen through admin-checked, atomic functions.
+- Orders are created only through `nr_place_preview_order`; direct browser inserts and price/payment updates are denied.
+- That function rejects unknown/disabled products, stock violations, duplicate lines, fractional quantities and unsupported destinations; computes totals; and makes duplicate requests idempotent.
+- Preview status updates cannot change payment status or amounts, including from an admin browser session.
+- A failed configured catalog disables ordering instead of falling back to demo prices.
 
-For an existing repository, create a new branch and integrate these files deliberately. Do not overwrite server code, migrations or secrets from your current project.
+## Vercel
+
+Keep the existing GitHub/Vercel relationship. The project includes `vercel.json` with `npm run build` and output `dist`. Add the same public Supabase variables in Vercel and redeploy. Without them the deployed build is explicitly a demo. Environment variables are evaluated at build time.
+
+## Git commands
+
+For this delivered branch:
 
 ```sh
-git switch -c redesign/nricart-editorial
-# Copy this project's source into the intended frontend directory, then:
+git fetch origin
+git switch feat/full-pantry-store
 npm ci
-npm test
-npm run build
-git add .
-git commit -m "Build NRICart editorial storefront"
-git push -u origin redesign/nricart-editorial
+npm run dev
 ```
 
-In Vercel use the **Vite** preset, build command `npm run build`, output `dist`. If this lives in a subdirectory, set that directory as the Vercel project root. Review its branch preview before merging into the production branch.
+For your later edits on the same branch:
 
-This repository contains the new storefront. Vercel deployment and the live Supabase connection are separate setup steps; no production database changes are performed by this code.
+```sh
+git add .
+git commit -m "Refine NRICart pantry store"
+git push -u origin feat/full-pantry-store
+```
 
-## Research and design rationale
+Review and merge the pull request when ready; the delivery does not overwrite `main` or alter your live database.
 
-Reviewed the available NRICart conversation context and nricart.com. The latter showed unrelated template content; this rebuild uses the home/Indian pantry brand idea without reproducing those sections. nricart.vercel.app could not be retrieved through search. Instagram returned a 429 response and the retrieved X profile exposed no usable posts; these platforms were not represented as completed visual audits.
+## Images and design
 
-References:
-- https://nricart.com/ — public brand and contact context.
-- https://flybyjing.com/ — food-first storytelling and flavour-led merchandising.
-- https://www.diasporaco.com/ — origin and pantry identity.
-- https://www.reddit.com/r/web_design/comments/qhk7pt/ — contrasting opinions on 3D commerce and usability; anecdotal, not conversion evidence.
-- https://www.reddit.com/r/web_design/comments/1uipon6/in_browsing_through_some_awardwinning_sites_my/ — discussion of animation fatigue.
-- https://vercel.com/docs/frameworks/frontend/vite
-- https://supabase.com/docs/guides/api/securing-your-api
+Eight separately generated image assets: seven individual products and a pantry-box hero. No product is cropped out of a collage. Product files are 1,254 × 1,254 px; the box is 1,672 × 941 px. These are **not native 4K**. WebP preserves their native dimensions for delivery; the generator did not return the requested 4K dimensions. Product imagery represents a concept, not verified real packaging.
 
-Chosen direction: oxblood and pale yellow, large sans-serif headlines with italic serif accents, food texture and varied editorial proportions. Motion is progressive enhancement: browsing works without it. No scroll hijacking, startup loading sequence, fake trust signals or decorative cursor replacement.
+See `docs/IMAGE-BRIEFS.md` for generation prompts and `QA.md` for verified checks and remaining limits.

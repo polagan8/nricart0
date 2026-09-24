@@ -1,0 +1,18 @@
+# Image generation record
+
+Built-in Imagegen used. Eight independent requests; all selected outputs integrated into `public/images/`. No composite image was divided into product shots.
+
+Shared brief: a single premium, photorealistic e-commerce photograph for NRICart, Indian pantry products for NRIs; crisp natural textures, professional food styling, no collage, UI or watermark; maximum resolution and 4K detail requested. Actual returned sizes are recorded below without upscaling.
+
+| File            | Subject-specific prompt                                                                                                                                                                                                                                            | Native dimensions |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- |
+| `box.webp`      | Open dark forest green delivery box with NRICart wordmark, glass jars of mango and gongura pickle, kraft pouches of turmeric/chilli/cumin, ingredients outside; three-quarter studio photograph on a warm saffron background, tactile cardboard and soft sunlight. | 1672 × 941        |
+| `mango.webp`    | Glass jar of chunky raw mango pickle in red chilli oil, lid alongside and raw mango wedge; warm sand background; entire product centred with margins.                                                                                                              | 1254 × 1254       |
+| `gongura.webp`  | Glass jar of gongura leafy pickle with reddish oil, lid and sorrel leaves; warm sand background; whole product centred.                                                                                                                                            | 1254 × 1254       |
+| `chicken.webp`  | Glass jar of Andhra chicken pickle with cooked chicken pieces in red spices, lid alongside; warm sand background; whole product centred.                                                                                                                           | 1254 × 1254       |
+| `prawn.webp`    | Glass jar of Andhra prawn pickle with recognizable curled prawns in red spices, lid alongside; warm sand background; whole product centred.                                                                                                                        | 1254 × 1254       |
+| `turmeric.webp` | Forest green resealable pouch with cream NRICart / TURMERIC label, ceramic bowl of golden turmeric powder and turmeric roots; warm sand background; whole product centred.                                                                                         | 1254 × 1254       |
+| `chilli.webp`   | Forest green resealable pouch with cream NRICart / CHILLI label, bowl of brick-red chilli powder and dried red chillies; warm sand background; whole product centred.                                                                                              | 1254 × 1254       |
+| `cumin.webp`    | Forest green resealable pouch with cream NRICart / CUMIN label and bowl of whole cumin seeds; warm sand background; whole product centred.                                                                                                                         | 1254 × 1254       |
+
+`table.webp` is retained from the previous project. All generated packaging is illustrative and needs matching to actual sale products before launch.

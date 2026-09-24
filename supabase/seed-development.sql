@@ -1,0 +1,37 @@
+-- DEVELOPMENT ONLY. Illustrative catalog, prices and delivery rates.
+-- Run only in a development project. Review real data before public launch.
+begin;
+insert into public.nr_products(id,name,category,diet,image,notes,description,active) values('mango','Mango Pickle','pickles','vegetarian','/images/mango.webp','Tangy, fiery, unmistakably home.','Raw mango in a bold, warming spice blend.',true) on conflict(id) do nothing;
+insert into public.nr_products(id,name,category,diet,image,notes,description,active) values('gongura','Gongura Pickle','pickles','vegetarian','/images/gongura.webp','The signature tang of Andhra.','Sorrel leaves with a deep, savoury chilli warmth.',true) on conflict(id) do nothing;
+insert into public.nr_products(id,name,category,diet,image,notes,description,active) values('chicken','Chicken Pickle','pickles','non-vegetarian','/images/chicken.webp','Big spice. Rich, savoury comfort.','Andhra-inspired chicken pickle for a flavourful side.',true) on conflict(id) do nothing;
+insert into public.nr_products(id,name,category,diet,image,notes,description,active) values('prawn','Prawn Pickle','pickles','non-vegetarian','/images/prawn.webp','A little taste of the coast.','Prawns in a rich, deeply spiced pickle. Contains shellfish.',true) on conflict(id) do nothing;
+insert into public.nr_products(id,name,category,diet,image,notes,description,active) values('turmeric','Turmeric Powder','powders','vegetarian','/images/turmeric.webp','Golden colour. Everyday warmth.','Earthy turmeric powder for dals, curries and everyday cooking.',true) on conflict(id) do nothing;
+insert into public.nr_products(id,name,category,diet,image,notes,description,active) values('chilli','Chilli Powder','powders','vegetarian','/images/chilli.webp','A bold red. A beautiful heat.','A warming red chilli powder for your everyday Indian pantry.',true) on conflict(id) do nothing;
+insert into public.nr_products(id,name,category,diet,image,notes,description,active) values('cumin','Whole Cumin','spices','vegetarian','/images/cumin.webp','The beginning of a good tadka.','Aromatic whole cumin seeds for tempering, roasting and grinding.',true) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('mango-250','mango',250,249,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('mango-500','mango',500,473,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('mango-1000','mango',1000,896,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('gongura-250','gongura',250,279,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('gongura-500','gongura',500,530,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('gongura-1000','gongura',1000,1004,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('chicken-250','chicken',250,449,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('chicken-500','chicken',500,853,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('chicken-1000','chicken',1000,1616,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('prawn-250','prawn',250,549,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('prawn-500','prawn',500,1043,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('prawn-1000','prawn',1000,1976,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('turmeric-250','turmeric',250,159,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('turmeric-500','turmeric',500,302,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('turmeric-1000','turmeric',1000,572,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('chilli-250','chilli',250,199,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('chilli-500','chilli',500,378,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('chilli-1000','chilli',1000,716,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('cumin-250','cumin',250,189,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('cumin-500','cumin',500,359,100) on conflict(id) do nothing;
+insert into public.nr_variants(id,product_id,weight_g,price,stock) values('cumin-1000','cumin',1000,680,100) on conflict(id) do nothing;
+insert into public.nr_shipping(country,name,fee,active) values('US','United States',2400,true) on conflict(country) do nothing;
+insert into public.nr_shipping(country,name,fee,active) values('GB','United Kingdom',2100,true) on conflict(country) do nothing;
+insert into public.nr_shipping(country,name,fee,active) values('CA','Canada',2600,true) on conflict(country) do nothing;
+insert into public.nr_shipping(country,name,fee,active) values('AU','Australia',2700,true) on conflict(country) do nothing;
+insert into public.nr_shipping(country,name,fee,active) values('AE','United Arab Emirates',1500,true) on conflict(country) do nothing;
+commit;

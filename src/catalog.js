@@ -1,114 +1,150 @@
 export const demoProducts = [
-  {
-    id: "mango",
-    name: "Mango Pickle",
-    category: "vegetarian",
-    price: 249,
-    weight: "250 g",
-    image: "/images/mango.webp",
-    tag: "THE CLASSIC",
-    notes: "Tangy mango. A proper chilli kick.",
-    description:
-      "The unmistakable tang of raw mango meets a bold, warming spice profile. A familiar companion to rice, dal and everyday meals.",
-    heat: "Bold",
-    pairing: "Warm rice & ghee",
+  [
+    "mango",
+    "Mango Pickle",
+    "pickles",
+    249,
+    "Tangy, fiery, unmistakably home.",
+    "Raw mango in a bold, warming spice blend.",
+    "vegetarian",
+  ],
+  [
+    "gongura",
+    "Gongura Pickle",
+    "pickles",
+    279,
+    "The signature tang of Andhra.",
+    "Sorrel leaves with a deep, savoury chilli warmth.",
+    "vegetarian",
+  ],
+  [
+    "chicken",
+    "Chicken Pickle",
+    "pickles",
+    449,
+    "Big spice. Rich, savoury comfort.",
+    "Andhra-inspired chicken pickle for a flavourful side.",
+    "non-vegetarian",
+  ],
+  [
+    "prawn",
+    "Prawn Pickle",
+    "pickles",
+    549,
+    "A little taste of the coast.",
+    "Prawns in a rich, deeply spiced pickle. Contains shellfish.",
+    "non-vegetarian",
+  ],
+  [
+    "turmeric",
+    "Turmeric Powder",
+    "powders",
+    159,
+    "Golden colour. Everyday warmth.",
+    "Earthy turmeric powder for dals, curries and everyday cooking.",
+    "vegetarian",
+  ],
+  [
+    "chilli",
+    "Chilli Powder",
+    "powders",
+    199,
+    "A bold red. A beautiful heat.",
+    "A warming red chilli powder for your everyday Indian pantry.",
+    "vegetarian",
+  ],
+  [
+    "cumin",
+    "Whole Cumin",
+    "spices",
+    189,
+    "The beginning of a good tadka.",
+    "Aromatic whole cumin seeds for tempering, roasting and grinding.",
+    "vegetarian",
+  ],
+].map(([id, name, category, price, notes, description, diet]) => ({
+  id,
+  name,
+  category,
+  price,
+  notes,
+  description,
+  diet,
+  image: `/images/${id}.webp`,
+  active: true,
+  stock: 100,
+  weight_g: 250,
+}));
+export const demoVariants = demoProducts.flatMap((p) =>
+  [250, 500, 1000].map((g) => ({
+    id: `${p.id}-${g}`,
+    product_id: p.id,
+    weight_g: g,
+    price: Math.round(
+      ((p.price * g) / 250) * (g === 1000 ? 0.9 : g === 500 ? 0.95 : 1),
+    ),
+    stock: 100,
     active: true,
-  },
-  {
-    id: "gongura",
-    name: "Gongura Pickle",
-    category: "vegetarian",
-    price: 279,
-    weight: "250 g",
-    image: "/images/gongura.webp",
-    tag: "ANDHRA FAVOURITE",
-    notes: "Leafy, sharp & full of character.",
-    description:
-      "A distinctive sour, leafy flavour with the warmth of chilli. For those who like their pickle with a little extra character.",
-    heat: "Bold",
-    pairing: "Dal rice & dosa",
-    active: true,
-  },
-  {
-    id: "chicken",
-    name: "Chicken Pickle",
-    category: "non-vegetarian",
-    price: 449,
-    weight: "250 g",
-    image: "/images/chicken.webp",
-    tag: "THE SAVOURY ONE",
-    notes: "Rich spice. A savoury finish.",
-    description:
-      "A savoury chicken pickle with an intense spice profile. A little on the side brings a different dimension to a simple meal.",
-    heat: "Intense",
-    pairing: "Steamed rice",
-    active: true,
-  },
-  {
-    id: "prawn",
-    name: "Prawn Pickle",
-    category: "non-vegetarian",
-    price: 549,
-    weight: "250 g",
-    image: "/images/prawn.webp",
-    tag: "COASTAL FLAVOURS",
-    notes: "Coastal flavour. Lingering warmth.",
-    description:
-      "Prawn pickle with a rich, savoury character and lingering chilli warmth. A coastal-inspired addition to the table.",
-    heat: "Intense",
-    pairing: "Rice & dal",
-    active: true,
-  },
+  })),
+);
+export const demoShipping = [
+  { country: "US", name: "United States", fee: 2400 },
+  { country: "GB", name: "United Kingdom", fee: 2100 },
+  { country: "CA", name: "Canada", fee: 2600 },
+  { country: "AU", name: "Australia", fee: 2700 },
+  { country: "AE", name: "United Arab Emirates", fee: 1500 },
 ];
-export const money = (value) =>
+export const money = (v) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
-export function validProduct(p) {
-  return (
-    p &&
-    typeof p.id === "string" &&
-    typeof p.name === "string" &&
-    ["vegetarian", "non-vegetarian"].includes(p.category) &&
-    Number.isFinite(p.price) &&
-    p.price >= 0 &&
-    typeof p.image === "string" &&
-    safeImage(p.image) &&
-    typeof p.weight === "string"
-  );
-}
-export function safeImage(url) {
-  try {
-    return (
-      (url.startsWith("/") && !url.startsWith("//")) ||
-      new URL(url).protocol === "https:"
-    );
-  } catch {
-    return false;
-  }
-}
-export function cleanCart(value, products) {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(v);
+export const weight = (g) =>
+  g >= 1000 ? `${Number((g / 1000).toFixed(3))} kg` : `${g} g`;
+export const safeImage = (url) =>
+  typeof url === "string" && (/^\/(?!\/)/.test(url) || /^https:\/\//.test(url));
+export const validProduct = (p) =>
+  p &&
+  typeof p.id === "string" &&
+  typeof p.name === "string" &&
+  ["pickles", "powders", "spices"].includes(p.category) &&
+  safeImage(p.image);
+export function cleanCart(value, variants) {
   if (!Array.isArray(value)) return [];
-  const ids = new Set(products.map((p) => p.id));
-  const result = [];
-  for (const item of value) {
-    if (
-      item &&
-      ids.has(item.id) &&
-      Number.isInteger(item.qty) &&
-      item.qty > 0 &&
-      !result.some((p) => p.id === item.id)
-    )
-      result.push({ id: item.id, qty: Math.min(item.qty, 20) });
+  const seen = new Set();
+  return value
+    .filter((i) => {
+      const v = variants.find((v) => v.id === i.id && v.active);
+      if (!v || seen.has(i.id) || !Number.isInteger(i.qty) || i.qty <= 0)
+        return false;
+      seen.add(i.id);
+      return true;
+    })
+    .map((i) => ({
+      id: i.id,
+      qty: Math.min(i.qty, 99, variants.find((v) => v.id === i.id).stock),
+    }))
+    .filter((i) => i.qty > 0);
+}
+export function totals(cart, variants, fee = 0) {
+  let subtotal = 0,
+    grams = 0;
+  for (const i of cart) {
+    const v = variants.find((v) => v.id === i.id);
+    if (v) {
+      subtotal += Math.round(v.price * 100) * i.qty;
+      grams += v.weight_g * i.qty;
+    }
   }
-  return result;
+  const free = grams > 10000;
+  return {
+    subtotal: subtotal / 100,
+    grams,
+    free,
+    shipping: free ? 0 : fee,
+    total: subtotal / 100 + (free ? 0 : fee),
+  };
 }
-export function cartTotal(cart, products) {
-  return cart.reduce(
-    (sum, line) =>
-      sum + (products.find((p) => p.id === line.id)?.price || 0) * line.qty,
-    0,
-  );
-}
+export const cartTotal = (cart, variants) => totals(cart, variants).subtotal;
