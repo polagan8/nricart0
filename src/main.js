@@ -172,7 +172,7 @@ function checkout() {
 }
 function account() {
   if (session && !recovering)
-    return `<section class="page-heading"><span class="eyebrow">YOUR NRICART</span><h1>Welcome <em>home.</em></h1><p>${esc(session.user.email)}</p><button class="text-link" data-signout>Sign out</button></section><section class="section"><div class="section-heading"><h2>Your orders</h2><button class="button dark" data-load-box>Restore saved box</button></div><div id="orders-list">Loading your orders…</div></section>`;
+    return `<section class="page-heading"><span class="eyebrow">YOUR NRICART</span><h1>Welcome <em>home.</em></h1><p>${esc(session.user.email)}</p>${admin ? '<p><a class="button dark" href="#/admin">Manage store ↗</a></p>' : ""}<button class="text-link" data-signout>Sign out</button></section><section class="section"><div class="section-heading"><h2>Your orders</h2><button class="button dark" data-load-box>Restore saved box</button></div><div id="orders-list">Loading your orders…</div></section>`;
   return `<section class="account-layout"><div class="account-art"><img src="/images/box.webp" alt="NRICart pantry box"><div><span class="eyebrow">YOUR NEXT CHAPTER. A FAMILIAR FLAVOUR.</span><h2>A little closer<br><em>to home.</em></h2></div></div><div class="account-form"><span class="eyebrow">WELCOME TO NRICART</span><h1>${authMode === "signup" ? "Make yourself <em>at home.</em>" : authMode === "reset" ? "A fresh <em>start.</em>" : authMode === "update" ? "Set your <em>password.</em>" : "Good to have<br>you <em>back.</em>"}</h1>${!db ? '<p class="notice">Account connection pending. Sign-in becomes available when Supabase is configured.</p>' : ""}<form id="auth-form">${authMode !== "update" ? '<label class="field">Email address<input name="email" type="email" required autocomplete="email"></label>' : ""}${authMode !== "reset" ? `<label class="field">Password<input name="password" type="password" minlength="8" required autocomplete="${authMode === "login" ? "current-password" : "new-password"}"></label>` : ""}<p id="auth-message" role="status"></p><button class="button dark" ${!db ? "disabled" : ""}>${authMode === "signup" ? "Create account" : authMode === "reset" ? "Send reset link" : authMode === "update" ? "Update password" : "Sign in"} <span>↗</span></button></form><div class="auth-links"><button data-auth="${authMode === "login" ? "signup" : "login"}">${authMode === "login" ? "New here? Create an account" : "Back to sign in"}</button><button data-auth="reset">Forgot password?</button></div><a class="text-link" href="#/shop">Continue browsing ↗</a></div></section>`;
 }
 async function loadOrders() {
@@ -282,6 +282,16 @@ function render() {
                   ? `<section class="story-page"><span class="eyebrow">WHY NRICART EXISTS</span><h1>Home isn’t always a place.<br>Sometimes, it’s <em>a spoonful.</em></h1><div class="parallax"><img src="/images/table.webp" alt="Indian meal with pickles and rice"></div><p>Maybe it’s rice and pickle after a long day. Or the aroma of cumin hitting a warm pan. NRICart is built around that feeling: the familiar flavours that make a new place feel like your own.</p><p>Choose the things you miss. Put them in a box. Bring a little of home to your everyday table.</p><a class="button dark" href="#/box">Start your box ↗</a></section>`
                   : home();
   document.title = `${r === "/box" ? "Build your box" : r === "/shop" ? "The pantry" : r === "/admin" ? "Admin" : r === "/account" ? "Your account" : "India, wherever you are"} — NRICart`;
+  const accountLink = document.querySelector(".header-actions a");
+  accountLink.href = admin ? "#/admin" : "#/account";
+  accountLink.textContent = admin ? "Manage store" : "Account";
+  accountLink.setAttribute(
+    "aria-label",
+    admin ? "Manage store" : "Your account",
+  );
+  const mobileAccount = document.querySelector(".mobile-nav a:last-child");
+  mobileAccount.href = admin ? "#/admin" : "#/account";
+  mobileAccount.textContent = admin ? "Admin" : "Account";
   renderCart();
   motion();
   if (r === "/account" && session) loadOrders();
@@ -482,6 +492,7 @@ document.addEventListener("submit", async (e) => {
         recovering = false;
         session = (await db.auth.getSession()).data.session;
         admin = await isAdmin();
+        if (admin) location.hash = "/admin";
         render();
       }
     } catch (err) {
@@ -641,7 +652,7 @@ if (db)
         } catch {
           admin = false;
         }
-        if (route() === "/account" && !recovering) render();
+        if (!recovering) render();
       }, 0);
     }
   });
