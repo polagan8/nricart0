@@ -1730,3 +1730,18 @@ dialog::backdrop {
     padding-bottom: 50px;
   }
 }
+
+.google-login {
+  width: 100%;
+  justify-content: center;
+  background: #fff;
+  color: #193c32;
+  border: 1px solid #b7c3ba;
+  margin-top: 1rem;
+}
+.auth-divider {
+  text-align: center;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin: 1.2rem 0;
+}

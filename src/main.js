@@ -173,7 +173,7 @@ function checkout() {
 function account() {
   if (session && !recovering)
     return `<section class="page-heading"><span class="eyebrow">YOUR NRICART</span><h1>Welcome <em>home.</em></h1><p>${esc(session.user.email)}</p>${admin ? '<p><a class="button dark" href="#/admin">Manage store ↗</a></p>' : ""}<button class="text-link" data-signout>Sign out</button></section><section class="section"><div class="section-heading"><h2>Your orders</h2><button class="button dark" data-load-box>Restore saved box</button></div><div id="orders-list">Loading your orders…</div></section>`;
-  return `<section class="account-layout"><div class="account-art"><img src="/images/box.webp" alt="NRICart pantry box"><div><span class="eyebrow">YOUR NEXT CHAPTER. A FAMILIAR FLAVOUR.</span><h2>A little closer<br><em>to home.</em></h2></div></div><div class="account-form"><span class="eyebrow">WELCOME TO NRICART</span><h1>${authMode === "signup" ? "Make yourself <em>at home.</em>" : authMode === "reset" ? "A fresh <em>start.</em>" : authMode === "update" ? "Set your <em>password.</em>" : "Good to have<br>you <em>back.</em>"}</h1>${!db ? '<p class="notice">Account connection pending. Sign-in becomes available when Supabase is configured.</p>' : ""}<form id="auth-form">${authMode !== "update" ? '<label class="field">Email address<input name="email" type="email" required autocomplete="email"></label>' : ""}${authMode !== "reset" ? `<label class="field">Password<input name="password" type="password" minlength="8" required autocomplete="${authMode === "login" ? "current-password" : "new-password"}"></label>` : ""}<p id="auth-message" role="status"></p><button class="button dark" ${!db ? "disabled" : ""}>${authMode === "signup" ? "Create account" : authMode === "reset" ? "Send reset link" : authMode === "update" ? "Update password" : "Sign in"} <span>↗</span></button></form><div class="auth-links"><button data-auth="${authMode === "login" ? "signup" : "login"}">${authMode === "login" ? "New here? Create an account" : "Back to sign in"}</button><button data-auth="reset">Forgot password?</button></div><a class="text-link" href="#/shop">Continue browsing ↗</a></div></section>`;
+  return `<section class="account-layout"><div class="account-art"><img src="/images/box.webp" alt="NRICart pantry box"><div><span class="eyebrow">YOUR NEXT CHAPTER. A FAMILIAR FLAVOUR.</span><h2>A little closer<br><em>to home.</em></h2></div></div><div class="account-form"><span class="eyebrow">WELCOME TO NRICART</span><h1>${authMode === "signup" ? "Make yourself <em>at home.</em>" : authMode === "reset" ? "A fresh <em>start.</em>" : authMode === "update" ? "Set your <em>password.</em>" : "Good to have<br>you <em>back.</em>"}</h1>${!db ? '<p class="notice">Account connection pending. Sign-in becomes available when Supabase is configured.</p>' : ""}${authMode === "login" || authMode === "signup" ? `<button type="button" class="button google-login" data-google-login ${!db ? "disabled" : ""}>Continue with Google</button><p class="auth-divider">or continue with email</p>` : ""}<form id="auth-form">${authMode !== "update" ? '<label class="field">Email address<input name="email" type="email" required autocomplete="email"></label>' : ""}${authMode !== "reset" ? `<label class="field">Password<input name="password" type="password" minlength="8" required autocomplete="${authMode === "login" ? "current-password" : "new-password"}"></label>` : ""}<p id="auth-message" role="status"></p><button class="button dark" ${!db ? "disabled" : ""}>${authMode === "signup" ? "Create account" : authMode === "reset" ? "Send reset link" : authMode === "update" ? "Update password" : "Sign in"} <span>↗</span></button></form><div class="auth-links"><button data-auth="${authMode === "login" ? "signup" : "login"}">${authMode === "login" ? "New here? Create an account" : "Back to sign in"}</button><button data-auth="reset">Forgot password?</button></div><a class="text-link" href="#/shop">Continue browsing ↗</a></div></section>`;
 }
 async function loadOrders() {
   try {
@@ -379,6 +379,32 @@ document.addEventListener("click", (e) => {
       admin = false;
       render();
     });
+  if ("googleLogin" in b.dataset && db)
+    action(async () => {
+      b.disabled = true;
+      try {
+        sessionStorage.setItem("nr-oauth-return", "1");
+        const { data, error } = await db.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: location.origin + "/",
+            skipBrowserRedirect: true,
+          },
+        });
+        if (error) throw error;
+        if (!data?.url)
+          throw Error(
+            "Google sign-in is unavailable. Please try email sign-in.",
+          );
+        location.assign(data.url);
+      } catch (error) {
+        sessionStorage.removeItem("nr-oauth-return");
+        const message = document.querySelector("#auth-message");
+        if (message) message.textContent = error.message;
+      } finally {
+        b.disabled = false;
+      }
+    });
   if ("retry" in b.dataset) load();
   if ("reviewBox" in b.dataset)
     $("#builder-summary").scrollIntoView({
@@ -485,7 +511,7 @@ document.addEventListener("submit", async (e) => {
       if (authMode === "signup" || authMode === "reset")
         $("#auth-message").textContent =
           authMode === "signup"
-            ? "Check your email to confirm your account."
+            ? "Check your inbox and spam folder. Open the confirmation link to finish creating your account, then sign in."
             : "If this account exists, a reset link is on its way.";
       else {
         authMode = "login";
@@ -615,6 +641,10 @@ async function load(rerender = true) {
     cart = cleanCart(cart, variants);
     session = (await db.auth.getSession()).data.session;
     admin = session ? await isAdmin() : false;
+    if (session && sessionStorage.getItem("nr-oauth-return") && !recovering) {
+      sessionStorage.removeItem("nr-oauth-return");
+      location.hash = admin ? "/admin" : "/account";
+    }
   } catch (e) {
     failed = true;
     products = [];
