@@ -22,6 +22,15 @@ test("Postgres security, server totals, stock and admin transactions", async (t)
       "utf8",
     ),
   );
+  await db.exec(
+    fs.readFileSync(
+      new URL(
+        "../supabase/migrations/20260925_restrict_anonymous.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
   await db.exec(`insert into nr_admins values('${admin}')`);
   const as = async (id) =>
     db.exec(

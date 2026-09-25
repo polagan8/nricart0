@@ -59,7 +59,7 @@ const notice = () =>
       ? '<p class="notice error">The live pantry is unavailable. Ordering is disabled. <button data-retry>Try again</button></p>'
       : !db
         ? '<p class="notice">Preview store · Sample prices, delivery rates and product imagery · Payments are not enabled</p>'
-        : '<p class="notice">Checkout preview · No payment will be taken</p>';
+        : '<p class="notice">Preview store · Sample prices and delivery rates · No payment or shipment</p>';
 const options = () =>
   shipping
     .map(
@@ -384,13 +384,11 @@ document.addEventListener("click", (e) => {
           "Sign in to save your box across devices. Your box is kept on this browser.",
         );
       await checked(
-        db
-          .from("nr_boxes")
-          .upsert({
-            user_id: session.user.id,
-            lines: cart,
-            updated_at: new Date().toISOString(),
-          }),
+        db.from("nr_boxes").upsert({
+          user_id: session.user.id,
+          lines: cart,
+          updated_at: new Date().toISOString(),
+        }),
       );
       toast("Your box has been saved.");
     });

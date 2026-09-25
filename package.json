@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "test": "node --test tests/*.test.js",
-    "test:ui": "npm run build && node --test tests/storefront.ui.js",
+    "test:ui": "vite build --mode test && node --test tests/storefront.ui.js",
     "preview:portable": "npm run build && node scripts/build-preview.mjs"
   },
   "devDependencies": {

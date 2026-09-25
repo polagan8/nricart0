@@ -1,8 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
-const url = import.meta.env.VITE_SUPABASE_URL;
+import { publicConfig } from "./public-config.js";
+const offline = import.meta.env.MODE === "test";
+const url = offline
+  ? null
+  : import.meta.env.VITE_SUPABASE_URL || publicConfig.url;
 const key =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY;
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  publicConfig.key;
 export const db = url && key ? createClient(url, key) : null;
 export async function checked(query) {
   const { data, error } = await query;

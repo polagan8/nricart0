@@ -1,3 +1,7 @@
+## Connected preview — 25 September 2026
+
+Supabase project `vzsmqzovlgasnoynpjbr` now has the store migration, anonymous-function permission fix, and illustrative preview catalog (7 products, 21 sizes, 5 rates). Existing `products` data is unchanged. Payment remains disabled. Create your account through the site, then assign that verified account in `nr_admins`. Configure Supabase Auth allowed redirect URLs for the preview and production domains before testing email confirmation/recovery.
+
 # NRICart — the full pantry storefront
 
 A Vite storefront for an Indian pantry business serving NRIs: pickles, turmeric, chilli powder and whole spices. This update replaces the four-pickle-only store with a custom-box shopping flow and a Supabase-backed application implementation.
@@ -79,7 +83,7 @@ on conflict do nothing;
 
 ## Vercel
 
-Keep the existing GitHub/Vercel relationship. The project includes `vercel.json` with `npm run build` and output `dist`. Add the same public Supabase variables in Vercel and redeploy. Without them the deployed build is explicitly a demo. Environment variables are evaluated at build time.
+Keep the existing GitHub/Vercel relationship. The project includes `vercel.json` with `npm run build` and output `dist`. Add the same public Supabase variables in Vercel and redeploy. The delivered preview uses the browser-safe publishable credentials in `src/public-config.js`; environment variables override these. Never use a secret or service-role key here. Environment variables are evaluated at build time.
 
 ## Git commands
 
@@ -100,7 +104,7 @@ git commit -m "Refine NRICart pantry store"
 git push -u origin feat/full-pantry-store
 ```
 
-Review and merge the pull request when ready; the delivery does not overwrite `main` or alter your live database.
+Review and merge the pull request when ready; the delivery does not overwrite `main` ; the new Supabase tables are installed alongside the existing catalog.
 
 ## Images and design
 
