@@ -1,122 +1,126 @@
-/** Progressive enhancement: native scrolling, no pinned or hijacked sections. */
-export function initMotion() {
-  const root = document.documentElement;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  const compact = matchMedia('(max-width: 760px)');
-  const toggle = document.querySelector('#motion-toggle');
-  const hero = document.querySelector('.hero');
-  const visual = document.querySelector('#hero-visual');
-  const photo = visual.querySelector('img');
-  const table = document.querySelector('.table-photo-wrap');
-  const strip = document.querySelector('.flavour-strip');
-  let preference;
-  try { preference = localStorage.getItem('nricart-motion'); } catch {}
-  let paused = reduced.matches || preference === 'off';
-  let frame = 0;
-  let pointerX = 0, pointerY = 0;
-  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-  const elements = [hero, table, strip];
-
-  function draw() {
-    frame = 0;
-    if (paused) return;
-    const viewport = innerHeight;
-    const heroBox = hero.getBoundingClientRect();
-    const tableBox = table.getBoundingClientRect();
-    const stripBox = strip.getBoundingClientRect();
-    const range = root.scrollHeight - root.clientHeight;
-    root.style.setProperty('--page-progress', range > 0 ? clamp(scrollY / range, 0, 1) : 0);
-    if (heroBox.bottom > 0 && heroBox.top < viewport) {
-      const progress = clamp(-heroBox.top / heroBox.height, 0, 1);
-      const amount = compact.matches ? 0.45 : 1;
-      hero.style.setProperty('--hero-copy-y', `${progress * -80 * amount}px`);
-      hero.style.setProperty('--hero-image-y', `${progress * 72 * amount}px`);
-      hero.style.setProperty('--hero-scale', 1.1 + progress * 0.055);
-      photo.style.setProperty('--tilt-x', `${pointerY * -4}deg`);
-      photo.style.setProperty('--tilt-y', `${pointerX * 5}deg`);
-    }
-    if (tableBox.bottom > 0 && tableBox.top < viewport) {
-      const progress = clamp((viewport - tableBox.top) / (viewport + tableBox.height), 0, 1);
-      table.style.setProperty('--table-y', `${(progress - 0.5) * (compact.matches ? 40 : 100)}px`);
-    }
-    if (stripBox.bottom > 0 && stripBox.top < viewport) {
-      strip.style.setProperty('--strip-x', `${clamp((viewport - stripBox.top) * -0.2, -220, 0)}px`);
-    }
-  }
-  function schedule() {
-    if (!paused && !frame) frame = requestAnimationFrame(draw);
-  }
-  function applyPreference() {
-    root.classList.toggle('motion-off', paused);
-    toggle.textContent = paused ? 'Enable motion' : 'Pause motion';
-    toggle.setAttribute('aria-pressed', String(paused));
-    if (paused) {
-      cancelAnimationFrame(frame);
-      frame = 0;
-      root.style.removeProperty('--page-progress');
-      for (const element of elements) {
-        for (const property of ['--hero-copy-y', '--hero-image-y', '--hero-scale', '--table-y', '--strip-x']) element.style.removeProperty(property);
-      }
-      photo.style.removeProperty('--tilt-x');
-      photo.style.removeProperty('--tilt-y');
-    } else schedule();
-  }
-  toggle.addEventListener('click', () => {
-    paused = !paused;
-    preference = paused ? 'off' : 'on';
-    try { localStorage.setItem('nricart-motion', preference); } catch {}
-    applyPreference();
-  });
-  reduced.addEventListener('change', () => {
-    paused = reduced.matches || preference === 'off';
-    applyPreference();
-  });
-  compact.addEventListener('change', schedule);
-  addEventListener('scroll', schedule, { passive: true });
-  addEventListener('resize', schedule, { passive: true });
-  addEventListener('pageshow', schedule);
-  visual.addEventListener('pointermove', event => {
-    if (paused || event.pointerType === 'touch') return;
-    const box = visual.getBoundingClientRect();
-    pointerX = (event.clientX - box.left) / box.width - 0.5;
-    pointerY = (event.clientY - box.top) / box.height - 0.5;
-    schedule();
-  });
-  visual.addEventListener('pointerleave', () => {
-    pointerX = pointerY = 0;
-    schedule();
-  });
-
-  // Products can be replaced by filtering or a successful Supabase response.
-  let entranceObserver, productObserver;
-  if ('IntersectionObserver' in window) {
-    entranceObserver = new IntersectionObserver(entries => {
-      for (const entry of entries) if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        entranceObserver.unobserve(entry.target);
-      }
-    }, { threshold: 0.08 });
-    const observeProducts = () => {
-      document.querySelectorAll('.product-card').forEach((card, index) => {
-        card.classList.add('reveal');
-        card.style.setProperty('--reveal-delay', `${(index % (compact.matches ? 2 : 4)) * 110}ms`);
-        entranceObserver.observe(card);
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+gsap.registerPlugin(ScrollTrigger);
+let context;
+let off = false;
+try {
+  off = localStorage.getItem("nr-motion") === "off";
+} catch {}
+export function motion() {
+  context?.revert();
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.documentElement.classList.toggle("motion-off", off || reduced);
+  document.querySelector("#motion-toggle").textContent =
+    off || reduced ? "Enable motion" : "Pause motion";
+  document
+    .querySelector("#motion-toggle")
+    .setAttribute("aria-pressed", String(off || reduced));
+  if (off || reduced) return;
+  context = gsap.context(() => {
+    if (document.querySelector(".hero")) {
+      gsap.from(".hero-copy > *", {
+        y: 35,
+        opacity: 0,
+        duration: 0.9,
+        stagger: 0.12,
+        ease: "power3.out",
       });
-    };
-    document.querySelectorAll('.reveal').forEach(el => entranceObserver.observe(el));
-    observeProducts();
-    productObserver = new MutationObserver(observeProducts);
-    productObserver.observe(document.querySelector('#product-grid'), { childList: true });
-    root.classList.add('js-motion');
-  }
-  root.classList.add('scroll-effects');
-  applyPreference();
-  return () => {
-    cancelAnimationFrame(frame);
-    entranceObserver?.disconnect();
-    productObserver?.disconnect();
-    removeEventListener('scroll', schedule);
-    removeEventListener('resize', schedule);
-    removeEventListener('pageshow', schedule);
-  };
+      gsap.to(".hero-copy", {
+        yPercent: -18,
+        scrollTrigger: {
+          trigger: ".hero",
+          start: "top top",
+          end: "bottom top",
+          scrub: 1,
+        },
+      });
+      gsap.to(".hero-art img", {
+        yPercent: 12,
+        scale: 1.06,
+        scrollTrigger: {
+          trigger: ".hero",
+          start: "top top",
+          end: "bottom top",
+          scrub: 1,
+        },
+      });
+    }
+    gsap.utils.toArray(".floating-line").forEach((el, i) =>
+      gsap.fromTo(
+        el,
+        { xPercent: i % 2 ? -12 : 8 },
+        {
+          xPercent: i % 2 ? 8 : -12,
+          ease: "none",
+          scrollTrigger: {
+            trigger: el,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 1,
+          },
+        },
+      ),
+    );
+    gsap.utils.toArray(".product-grid").forEach((grid) => {
+      const cards = grid.querySelectorAll(".product-card");
+      if (cards.length)
+        gsap.from(cards, {
+          y: 38,
+          opacity: 0,
+          stagger: 0.09,
+          duration: 0.7,
+          ease: "power2.out",
+          scrollTrigger: { trigger: grid, start: "top 93%", once: true },
+        });
+    });
+    gsap.utils.toArray(".reveal").forEach((el) =>
+      gsap.from(el, {
+        y: 45,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out",
+        scrollTrigger: { trigger: el, start: "top 94%", once: true },
+      }),
+    );
+    gsap.utils.toArray(".parallax img").forEach((el) =>
+      gsap.fromTo(
+        el,
+        { yPercent: -5 },
+        {
+          yPercent: 5,
+          ease: "none",
+          scrollTrigger: {
+            trigger: el.parentElement,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 1,
+          },
+        },
+      ),
+    );
+    if (document.querySelector(".scroll-progress"))
+      gsap.fromTo(
+        ".scroll-progress",
+        { scaleX: 0 },
+        {
+          scaleX: 1,
+          ease: "none",
+          scrollTrigger: { start: 0, end: "max", scrub: 0.2 },
+        },
+      );
+  });
+  ScrollTrigger.refresh();
+}
+export function setupMotion() {
+  document.querySelector("#motion-toggle").addEventListener("click", () => {
+    off = !off;
+    try {
+      localStorage.setItem("nr-motion", off ? "off" : "on");
+    } catch {}
+    motion();
+  });
+  matchMedia("(prefers-reduced-motion: reduce)").addEventListener(
+    "change",
+    motion,
+  );
 }
